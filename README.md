@@ -1,6 +1,6 @@
 # Claude CLI
 
-An independent, local-first Claude-style coding-agent CLI built with TypeScript and Python. with a browser dashboard, OpenAI-compatible model routing, persistent sessions, workspace tools, MCP stdio integration and an extensible skills system.
+An independent, local-first Claude-style coding-agent CLI built with TypeScript and Python, with a browser dashboard, OpenAI-compatible model routing, persistent sessions, workspace tools, MCP stdio integration and an extensible skills system.
 
 Claude CLI is an independent project inspired by terminal coding-agent workflows. It is not affiliated with Anthropic, is not the official Claude Code product, and does not copy OpenClaude's proprietary branding or implementation.
 
@@ -84,13 +84,13 @@ export CLAUDE_MCP_SERVERS='{
 }'
 ```
 
-Restart the Python runtime after changing this variable. Claude starts configured commands as local subprocesses without a shell, performs MCP initialization and tool discovery, then invokes the selected tool. Only configure commands and environment values you trust. MCP server tools execute with the operating-system permissions of the Claude process; review server documentation and access scopes before enabling them.
+Restart the Python runtime after changing this variable. Claude CLI starts configured commands as local subprocesses without a shell, performs MCP initialization and tool discovery, then invokes the selected tool. Only configure commands and environment values you trust. MCP server tools execute with the operating-system permissions of the Claude CLI process; review server documentation and access scopes before enabling them.
 
 ## Skills
 
 Bundled skills: deep-research, code-architect, fullstack-engineer, debug-master, code-review, test-engineer, security-auditor, database-architect and git-master.
 
-Add project skills under `/.claude-cli/skills/<name>/SKILL.md` or user skills under `~/.claude-cli/skills/<name>/SKILL.md`.
+Add project skills under `./.claude-cli/skills/<name>/SKILL.md` or user skills under `~./.claude-cli/skills/<name>/SKILL.md`.
 
 ## Security notes
 
@@ -115,4 +115,4 @@ GitHub Actions runs TypeScript type-check/build and Python tests on pushes to `m
 
 ## Current scope
 
-Claude now includes a persistent coding-agent loop, workspace tools, local provider dashboard, encrypted keys, session history, write checkpoints, MCP stdio tool discovery and CI automation. This is an independent community project, not an official Anthropic product or a claim of complete OpenClaude feature parity or a certified production release. Streaming UX, native provider-specific adapters, interactive per-tool approval prompts, reliable rollback/restore UI, persistent specialist agents with independent contexts, richer task planning, broad platform testing and a security review remain future work. Validate the CI run and test against the actual providers and MCP servers you intend to use before relying on it for important repositories.
+Claude CLI now includes a persistent coding-agent loop, workspace tools, local provider dashboard, encrypted keys, session history, write checkpoints, MCP stdio tool discovery and CI automation. This is an independent community project, not an official Anthropic product or a claim of complete OpenClaude feature parity or a certified production release. Streaming UX, native provider-specific adapters, interactive per-tool approval prompts, reliable rollback/restore UI, persistent specialist agents with independent contexts, richer task planning, broad platform testing and a security review remain future work. Validate the CI run and test against the actual providers and MCP servers you intend to use before relying on it for important repositories.
