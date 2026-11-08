@@ -9,6 +9,7 @@ from .tools import WorkspaceTools
 from .sessions import SessionStore
 from .providers import complete, ProviderError
 from .mcp import list_tools as mcp_list_tools, call_tool as mcp_call_tool
+from .agents import delegate as delegate_agent
 
 app = FastAPI(title="NEXUS Agent Runtime", version="0.3.0")
 CONFIG_URL = os.getenv("NEXUS_CONFIG_URL", "http://127.0.0.1:4317")
@@ -32,7 +33,8 @@ TOOLS = [
  {"type":"function","function":{"name":"read_file","description":"Read a UTF-8 text file in the workspace.","parameters":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}}},
  {"type":"function","function":{"name":"search_files","description":"Search text in workspace files. Skips hidden folders, node_modules and .git.","parameters":{"type":"object","properties":{"query":{"type":"string"},"path":{"type":"string"}},"required":["query"]}}},
  {"type":"function","function":{"name":"write_file","description":"Create or replace a workspace file. Only available when the user explicitly enables write approval.","parameters":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}},
- {"type":"function","function":{"name":"run_shell","description":"Run a shell command in the workspace. Only available when the user explicitly enables shell approval.","parameters":{"type":"object","properties":{"command":{"type":"string"}},"required":["command"]}}}
+ {"type":"function","function":{"name":"run_shell","description":"Run a shell command in the workspace. Only available when the user explicitly enables shell approval.","parameters":{"type":"object","properties":{"command":{"type":"string"}},"required":["command"]}}},
+ {"type":"function","function":{"name":"delegate_task","description":"Ask a bounded advisory sub-agent to plan, review, research or design tests. Sub-agents cannot call tools or modify files.","parameters":{"type":"object","properties":{"role":{"type":"string","enum":["planner","reviewer","researcher","tester"]},"task":{"type":"string"}},"required":["role","task"]}}}
 ]
 
 @app.get("/health")
@@ -145,7 +147,12 @@ async def chat(body: ChatRequest) -> ChatResponse:
                         if not isinstance(args,dict):
                             raise ValueError("Tool arguments must be an object")
                         tool_name=fn.get("name","")
-                        result=await mcp_call_tool(tool_name,args) if tool_name.startswith("mcp__") else execute_tool(tool_name,args,workspace_tools,body,sid)
+                        if tool_name=="delegate_task":
+                            result=await delegate_agent(p,str(args.get("role","")),str(args.get("task","")))
+                        elif tool_name.startswith("mcp__"):
+                            result=await mcp_call_tool(tool_name,args)
+                        else:
+                            result=execute_tool(tool_name,args,workspace_tools,body,sid)
                     except Exception as exc:
                         result="Tool error: "+str(exc)[:500]
                     messages.append({"role":"tool","tool_call_id":call.get("id",""),"content":str(result)[:20000]})
