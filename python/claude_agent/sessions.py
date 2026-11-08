@@ -7,7 +7,7 @@ from uuid import uuid4
 
 class SessionStore:
     def __init__(self, path: Path | None = None):
-        self.path = path or (Path.home() / ".claude" / "sessions.sqlite3")
+        self.path = path or (Path.home() / ".claude-cli" / "sessions.sqlite3")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._init()
         try:
