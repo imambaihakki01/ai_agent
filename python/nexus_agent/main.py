@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from .skills import discover_skills, load_project_instructions
 from .tools import WorkspaceTools
 from .sessions import SessionStore
-from .providers import complete, ProviderError
+from .providers import complete, ProviderError\nfrom .mcp import list_tools as mcp_list_tools, call_tool as mcp_call_tool
 
 app = FastAPI(title="NEXUS Agent Runtime", version="0.3.0")
 CONFIG_URL = os.getenv("NEXUS_CONFIG_URL", "http://127.0.0.1:4317")
@@ -122,7 +122,7 @@ async def chat(body: ChatRequest) -> ChatResponse:
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(120,connect=15)) as client:
             for step in range(9):
-                choice=await complete(client,p,messages,TOOLS)
+                choice=await complete(client,p,messages,available_tools)
                 calls=choice.get("tool_calls") or []
                 if not calls:
                     answer=choice.get("content") or ""
@@ -138,7 +138,7 @@ async def chat(body: ChatRequest) -> ChatResponse:
                         args=json.loads(fn.get("arguments") or "{}")
                         if not isinstance(args,dict):
                             raise ValueError("Tool arguments must be an object")
-                        result=execute_tool(fn.get("name",""),args,workspace_tools,body,sid)
+                        tool_name=fn.get("name","")\n                        result=await mcp_call_tool(tool_name,args) if tool_name.startswith("mcp__") else execute_tool(tool_name,args,workspace_tools,body,sid)
                     except Exception as exc:
                         result="Tool error: "+str(exc)[:500]
                     messages.append({"role":"tool","tool_call_id":call.get("id",""),"content":str(result)[:20000]})
