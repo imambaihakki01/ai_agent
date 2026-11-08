@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field
 from .skills import discover_skills, load_project_instructions
 from .tools import WorkspaceTools
 from .sessions import SessionStore
-from .providers import complete, ProviderError\nfrom .mcp import list_tools as mcp_list_tools, call_tool as mcp_call_tool
+from .providers import complete, ProviderError
+from .mcp import list_tools as mcp_list_tools, call_tool as mcp_call_tool
 
 app = FastAPI(title="NEXUS Agent Runtime", version="0.3.0")
 CONFIG_URL = os.getenv("NEXUS_CONFIG_URL", "http://127.0.0.1:4317")
@@ -69,8 +70,12 @@ async def delete_session(session_id: str, workspace: str = Query(min_length=1, m
     return {"ok":True}
 
 @app.get("/sessions/{session_id}/checkpoints")
-async def get_checkpoints(session_id: str):
-    return {"checkpoints":SESSIONS.checkpoints(session_id)}
+async def get_checkpoints(session_id: str, workspace: str = Query(min_length=1, max_length=4096)):
+    root=Path(workspace).expanduser().resolve()
+    try:
+        return {"checkpoints":SESSIONS.checkpoints(session_id,str(root))}
+    except KeyError as exc:
+        raise HTTPException(404,str(exc)) from exc
 
 def execute_tool(name: str, args: dict[str, Any], tools: WorkspaceTools, body: ChatRequest, session_id: str) -> str:
     if name == "list_files":
