@@ -45,6 +45,7 @@ Chat commands:
   /help          Show commands
   /status        Check runtime health
   /sessions      List saved sessions for this workspace
+  /resume <id>   Resume a saved session for this workspace
   /new           Start a new conversation
   /init          Create CLAUDE.md project guidance
   /allow-write   Toggle file-write permission for this session
@@ -83,7 +84,7 @@ function initProject(): void {
   }
 }
 
-async function listSessions(): Promise<void> {
+async function listSessions(): Promise<Array<{ id?: string; title?: string; updated_at?: string; messages?: number }>> {
   const url = AGENT_URL + "/sessions?workspace=" + encodeURIComponent(process.cwd());
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(4000) });
@@ -94,7 +95,7 @@ async function listSessions(): Promise<void> {
     const sessions = data.sessions ?? [];
     if (sessions.length === 0) {
       console.log("No saved sessions for this workspace.");
-      return;
+      return [];
     }
     for (const session of sessions) {
       console.log(
@@ -102,9 +103,27 @@ async function listSessions(): Promise<void> {
         "  " + (session.updated_at ?? "") + "  " + (session.messages ?? 0) + " messages",
       );
     }
+    return sessions;
   } catch {
     console.log("Could not list sessions. Is the Python runtime running? Try: claude doctor");
+    return [];
   }
+}
+
+async function resumeSession(sessionId: string | undefined): Promise<string | undefined> {
+  const sessions = await listSessions();
+  if (!sessionId) {
+    if (sessions.length === 0) return undefined;
+    return sessions[0]?.id;
+  }
+
+  const match = sessions.find((session) => session.id === sessionId || session.id?.startsWith(sessionId));
+  if (!match) {
+    printNotice(`Session not found: ${sessionId}. Use /sessions to view available IDs.`, "warning");
+    return undefined;
+  }
+  printNotice(`Resumed session ${match.id}.`, "success");
+  return match.id;
 }
 
 async function main(): Promise<void> {
@@ -183,8 +202,10 @@ async function main(): Promise<void> {
 
   try {
     while (true) {
-      const message = (await readline.question(promptLabel(allowWrite, allowShell))).trim();
+      const input = await readline.question(promptLabel(allowWrite, allowShell));
+      const message = input.trim();
       if (!message) continue;
+
       if (message === "/exit" || message === "/quit") break;
       if (message === "/help") { help(); continue; }
       if (message === "/allow-write") {
@@ -206,12 +227,20 @@ async function main(): Promise<void> {
       if (message === "/dashboard") { printNotice("Dashboard: " + DASHBOARD_URL, "accent"); continue; }
       if (message === "/init") { initProject(); continue; }
       if (message === "/sessions") { await listSessions(); continue; }
+      if (message.startsWith("/resume")) {
+        const requested = message.slice("/resume".length).trim();
+        const nextSession = await resumeSession(requested || undefined);
+        if (nextSession) sessionId = nextSession;
+        continue;
+      }
       if (message === "/status") {
         const [dashboard, agent] = await Promise.all([
           health(DASHBOARD_URL + "/api/health"), health(AGENT_URL + "/health"),
         ]);
         printNotice("Dashboard: " + (dashboard.ok ? "online" : "offline") +
-          " · Agent: " + (agent.ok ? "online" : "offline"), dashboard.ok && agent.ok ? "success" : "warning");
+          " · Agent: " + (agent.ok ? "online" : "offline") +
+          " · Session: " + (sessionId ? sessionId.slice(0, 8) : "new"),
+          dashboard.ok && agent.ok ? "success" : "warning");
         continue;
       }
 
@@ -247,3 +276,4 @@ main().catch((error: unknown) => {
   console.error("Claude CLI error: " + (error instanceof Error ? error.message : String(error)));
   process.exitCode = 1;
 });
+
