@@ -48,9 +48,9 @@ Development: `npm run dev -- dashboard` or `npm run dev -- chat`. Use `claude --
 
 ## Providers
 
-The dashboard accepts OpenAI-compatible Chat Completions endpoints, including OpenAI, OpenRouter, DeepSeek, Groq, Mistral, Ollama, LM Studio and compatible gateways. Configure the base URL, model ID and optional API key. The runtime normalizes common base URL forms and retries transient network / rate-limit / server errors up to three attempts.
+The dashboard accepts native Anthropic Messages API profiles as well as OpenAI-compatible Chat Completions endpoints. For Anthropic, set the base URL to `https://api.anthropic.com`, enter your Claude model ID and API key; Claude CLI automatically uses the native `/v1/messages` API and translates tool calls. OpenAI-compatible options include OpenAI, OpenRouter, DeepSeek, Groq, Mistral, Ollama, LM Studio and compatible gateways. The runtime normalizes endpoint URLs and retries transient network / rate-limit / server errors up to three attempts.
 
-API keys are encrypted with AES-256-GCM and stored under `~/.claude-cli`; the master key is owner-only where supported. Decrypted keys are not returned to the browser. Provider-native APIs that do not expose an OpenAI-compatible chat endpoint are not yet supported.
+API keys are encrypted with AES-256-GCM and stored under `~/.claude-cli`; the master key is owner-only where supported. Decrypted keys are not returned to the browser. Other provider-native APIs that do not expose an OpenAI-compatible chat endpoint are not yet supported.
 
 ## CLI
 
