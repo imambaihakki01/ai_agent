@@ -1,4 +1,4 @@
-# NEXUS Project Instructions
+# Claude CLI Project Instructions
 
 Act as a careful software engineer. Inspect source, tests and conventions before editing. Plan multi-file work briefly, then implement and verify. Prefer small typed changes and regression tests. Never claim tests ran unless they did. Preserve user changes.
 
