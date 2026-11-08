@@ -4,6 +4,7 @@ import { stdin, stdout } from "node:process";
 import { existsSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { startServer } from "./server.js";
+import { printAssistant, printBanner, printNotice, promptLabel, startSpinner } from "./terminal-ui.js";
 
 const VERSION = "0.2.0";
 const AGENT_URL = (process.env.CLAUDE_AGENT_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
@@ -178,45 +179,43 @@ async function main(): Promise<void> {
   let allowWrite = false;
   let allowShell = false;
   let sessionId: string | undefined;
-  console.log(`\n  Claude CLI v${VERSION} · coding agent
-  ${process.cwd()}
-  /help for commands · writes OFF · shell OFF
-`);
+  printBanner(VERSION, process.cwd());
 
   try {
     while (true) {
-      const message = (await readline.question("You › ")).trim();
+      const message = (await readline.question(promptLabel(allowWrite, allowShell))).trim();
       if (!message) continue;
       if (message === "/exit" || message === "/quit") break;
       if (message === "/help") { help(); continue; }
       if (message === "/allow-write") {
         allowWrite = !allowWrite;
-        console.log("File writes " + (allowWrite ? "ENABLED" : "DISABLED") + " for this session.");
+        printNotice("File writes " + (allowWrite ? "ENABLED" : "DISABLED") + " for this session.", allowWrite ? "success" : "warning");
         continue;
       }
       if (message === "/allow-shell") {
         allowShell = !allowShell;
-        console.log("Shell execution " + (allowShell ? "ENABLED" : "DISABLED") + " for this session.");
+        printNotice("Shell execution " + (allowShell ? "ENABLED" : "DISABLED") + " for this session.", allowShell ? "success" : "warning");
         continue;
       }
       if (message === "/new" || message === "/clear") {
         sessionId = undefined;
-        console.log("Started a fresh conversation. Previous session remains saved.");
+        printNotice("Started a fresh conversation. Previous session remains saved.", "success");
         continue;
       }
       if (message === "/skills") { console.log(SKILLS.join(" · ")); continue; }
-      if (message === "/dashboard") { console.log("Dashboard: " + DASHBOARD_URL); continue; }
+      if (message === "/dashboard") { printNotice("Dashboard: " + DASHBOARD_URL, "accent"); continue; }
       if (message === "/init") { initProject(); continue; }
       if (message === "/sessions") { await listSessions(); continue; }
       if (message === "/status") {
         const [dashboard, agent] = await Promise.all([
           health(DASHBOARD_URL + "/api/health"), health(AGENT_URL + "/health"),
         ]);
-        console.log("Dashboard: " + (dashboard.ok ? "online" : "offline") +
-          " · Agent: " + (agent.ok ? "online" : "offline"));
+        printNotice("Dashboard: " + (dashboard.ok ? "online" : "offline") +
+          " · Agent: " + (agent.ok ? "online" : "offline"), dashboard.ok && agent.ok ? "success" : "warning");
         continue;
       }
 
+      const stopSpinner = startSpinner("Thinking");
       try {
         const response = await fetch(AGENT_URL + "/chat", {
           method: "POST",
@@ -231,10 +230,12 @@ async function main(): Promise<void> {
         };
         if (!response.ok) throw new Error(data.detail ?? ("HTTP " + response.status));
         if (data.session_id) sessionId = data.session_id;
-        console.log("\nClaude › " + (data.response ?? "No response") + "\n");
+        stopSpinner();
+        printAssistant(data.response ?? "No response");
       } catch (error) {
-        console.log("Request failed: " + (error instanceof Error ? error.message : "Agent unavailable") +
-          ". Check claude doctor.");
+        stopSpinner();
+        printNotice("Request failed: " + (error instanceof Error ? error.message : "Agent unavailable") +
+          ". Check claude doctor.", "error");
       }
     }
   } finally {
