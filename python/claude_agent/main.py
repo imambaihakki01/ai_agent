@@ -11,7 +11,7 @@ from .providers import complete, ProviderError
 from .mcp import list_tools as mcp_list_tools, call_tool as mcp_call_tool
 from .agents import delegate as delegate_agent
 
-app = FastAPI(title="Claude Agent Runtime", version="0.3.0")
+app = FastAPI(title="Claude Agent Runtime", version="0.2.0")
 CONFIG_URL = os.getenv("CLAUDE_CONFIG_URL", "http://127.0.0.1:4317")
 SESSIONS = SessionStore()
 
@@ -41,7 +41,7 @@ TOOLS = [
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    return {"ok": True, "service": "claude-agent", "version": "0.3.0"}
+    return {"ok": True, "service": "claude-agent", "version": "0.2.0"}
 
 async def provider() -> dict[str, Any]:
     try:
