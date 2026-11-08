@@ -125,6 +125,7 @@ async def chat(body: ChatRequest) -> ChatResponse:
     SESSIONS.append(sid,"user",body.message)
     workspace_tools = WorkspaceTools(workspace)
     try:
+        available_tools=TOOLS + await mcp_list_tools()
         async with httpx.AsyncClient(timeout=httpx.Timeout(120,connect=15)) as client:
             for step in range(9):
                 choice=await complete(client,p,messages,available_tools)
@@ -143,7 +144,8 @@ async def chat(body: ChatRequest) -> ChatResponse:
                         args=json.loads(fn.get("arguments") or "{}")
                         if not isinstance(args,dict):
                             raise ValueError("Tool arguments must be an object")
-                        tool_name=fn.get("name","")\n                        result=await mcp_call_tool(tool_name,args) if tool_name.startswith("mcp__") else execute_tool(tool_name,args,workspace_tools,body,sid)
+                        tool_name=fn.get("name","")
+                        result=await mcp_call_tool(tool_name,args) if tool_name.startswith("mcp__") else execute_tool(tool_name,args,workspace_tools,body,sid)
                     except Exception as exc:
                         result="Tool error: "+str(exc)[:500]
                     messages.append({"role":"tool","tool_call_id":call.get("id",""),"content":str(result)[:20000]})
