@@ -58,15 +58,21 @@ API keys are encrypted with AES-256-GCM and stored under `~/.claude-cli`; the ma
 - `claude chat` — interactive coding-agent session (session history persists)
 - `claude doctor` — inspect agent availability
 - `claude skills` — list bundled skills
+- `claude init` — create a starter `CLAUDE.md` without overwriting an existing file
+- `claude sessions` — list saved sessions for the current workspace
+- `claude doctor` — check both dashboard and Python runtime
+- `claude --workspace <path>` — start Claude in a selected project directory
 - `/allow-write` — toggle workspace file writes for the current CLI session
 - `/allow-shell` — toggle shell execution for the current CLI session
-- `/help` and `/exit` — help and quit
+- `/sessions` — list saved sessions for the current workspace
+- `/init` — create project guidance
+- `/status`, `/help` and `/exit` — health, help and quit
 
 Write and shell permissions start disabled. Only enable them in a workspace you trust. Shell commands run in the selected workspace with a 60-second maximum timeout.
 
 ## Agent runtime
 
-The bounded tool loop supports listing files, reading files, text search, writing files (approval required), shell commands (approval required), tools discovered from configured MCP servers, and bounded advisory sub-agents (planner, reviewer, researcher and tester). Sub-agents have no workspace tools and cannot recursively delegate. Tool execution is capped at eight rounds per user request.
+The bounded tool loop supports listing files, reading files, text search, read-only Git status and diff inspection, writing files (approval required), shell commands (approval required), tools discovered from configured MCP servers, and bounded advisory sub-agents (planner, reviewer, researcher and tester). Sub-agents have no workspace tools and cannot recursively delegate. Tool execution is capped at eight rounds per user request.
 
 Sessions, messages and file-write checkpoints are stored in `~/.claude-cli/sessions.sqlite3`. Session history is scoped to its canonical workspace path. Checkpoints retain the previous contents of a file before an agent write; this is a recovery record, not an automatic rollback feature.
 
@@ -116,4 +122,4 @@ GitHub Actions runs TypeScript type-check/build and Python tests on pushes to `m
 
 ## Current scope
 
-Claude CLI now includes a persistent coding-agent loop, workspace tools, local provider dashboard, encrypted keys, session history, write checkpoints, MCP stdio tool discovery and CI automation. This is an independent community project, not an official Anthropic product or a claim of complete OpenClaude feature parity or a certified production release. Streaming UX, native provider-specific adapters, interactive per-tool approval prompts, reliable rollback/restore UI, persistent specialist agents with independent contexts, richer task planning, broad platform testing and a security review remain future work. Validate the CI run and test against the actual providers and MCP servers you intend to use before relying on it for important repositories.
+Claude CLI now includes a persistent coding-agent loop, workspace tools, local provider dashboard, encrypted keys, session history, write checkpoints, MCP stdio tool discovery and CI automation. This is an independent community project, not an official Anthropic product or a claim of complete OpenClaude feature parity or a certified production release. Streaming responses, interactive per-tool approval prompts, reliable rollback/restore UI, persistent specialist agents with independent contexts, richer task planning, broad platform testing and a security review remain future work. Validate the CI run and test against the actual providers and MCP servers you intend to use before relying on it for important repositories.
