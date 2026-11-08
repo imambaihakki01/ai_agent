@@ -1,6 +1,6 @@
 """SQLite-backed conversation history and checkpoints."""
 from __future__ import annotations
-import json, sqlite3, os
+import json, sqlite3, os, shutil
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -9,6 +9,13 @@ class SessionStore:
     def __init__(self, path: Path | None = None):
         self.path = path or (Path.home() / ".claude-cli" / "sessions.sqlite3")
         self.path.parent.mkdir(parents=True, exist_ok=True)
+        legacy=Path.home()/".nexus"/"sessions.sqlite3"
+        if path is None and not self.path.exists() and legacy.exists():
+            shutil.copy2(legacy,self.path)
+            for suffix in ("-wal","-shm"):
+                sidecar=Path(str(legacy)+suffix)
+                if sidecar.exists():
+                    shutil.copy2(sidecar,Path(str(self.path)+suffix))
         self._init()
         try:
             os.chmod(self.path, 0o600)
