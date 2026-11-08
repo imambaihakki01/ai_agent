@@ -8,7 +8,7 @@ def load_project_instructions(workspace:Path)->str:
             except OSError: pass
     return "\n\n".join(parts)
 def discover_skills(workspace:Path)->list[dict[str,str]]:
-    roots=[workspace/".claude"/"skills",Path.home()/".claude"/"skills",Path(__file__).resolve().parents[2]/"skills"];found={}
+    roots=[workspace/".claude-cli"/"skills",Path.home()/".claude-cli"/"skills",Path(__file__).resolve().parents[2]/"skills"];found={}
     for root in roots:
         if root.is_dir():
             for p in root.glob("*/SKILL.md"):
