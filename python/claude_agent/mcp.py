@@ -7,13 +7,13 @@ class MCPError(RuntimeError):
     pass
 
 def configured_servers() -> dict[str,dict[str,Any]]:
-    raw=os.getenv("Claude_MCP_SERVERS","{}")
+    raw=os.getenv("CLAUDE_MCP_SERVERS","{}")
     try:
         value=json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise MCPError("Claude_MCP_SERVERS must be valid JSON") from exc
+        raise MCPError("CLAUDE_MCP_SERVERS must be valid JSON") from exc
     if not isinstance(value,dict):
-        raise MCPError("Claude_MCP_SERVERS must be an object")
+        raise MCPError("CLAUDE_MCP_SERVERS must be an object")
     result={}
     for name,spec in value.items():
         if not re.fullmatch(r"[a-zA-Z0-9_-]{1,40}",name) or not isinstance(spec,dict):
