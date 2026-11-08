@@ -17,4 +17,4 @@ def test_checkpoint_roundtrip(tmp_path):
     store=SessionStore(tmp_path/"sessions.db")
     sid=store.create(str(tmp_path))
     store.checkpoint(sid,"before edit",{"files":["a.py"]})
-    assert store.checkpoints(sid)[0]["payload"]=={"files":["a.py"]}
+    assert store.checkpoints(sid,str(tmp_path))[0]["payload"]=={"files":["a.py"]}
