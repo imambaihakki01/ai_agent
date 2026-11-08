@@ -77,7 +77,10 @@ class SessionStore:
         with self._connect() as db:
             db.execute("INSERT INTO checkpoints(session_id,label,payload) VALUES(?,?,?)",(sid,label[:160],json.dumps(payload)[:500000]))
 
-    def checkpoints(self, sid: str) -> list[dict[str,Any]]:
+    def checkpoints(self, sid: str, workspace: str) -> list[dict[str,Any]]:
         with self._connect() as db:
+            owner=db.execute("SELECT 1 FROM sessions WHERE id=? AND workspace=?",(sid,workspace)).fetchone()
+            if not owner:
+                raise KeyError("Session not found for this workspace")
             rows=db.execute("SELECT id,label,payload,created_at FROM checkpoints WHERE session_id=? ORDER BY id DESC LIMIT 50",(sid,)).fetchall()
         return [{"id":r["id"],"label":r["label"],"payload":json.loads(r["payload"]),"created_at":r["created_at"]} for r in rows]
