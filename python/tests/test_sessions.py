@@ -1,4 +1,4 @@
-from nexus_agent.sessions import SessionStore
+from claude_agent.sessions import SessionStore
 
 def test_session_history_and_workspace_isolation(tmp_path):
     store=SessionStore(tmp_path/"sessions.db")
