@@ -20,7 +20,10 @@ async def complete(client: httpx.AsyncClient, provider: dict[str,Any], messages:
     if provider.get("apiKey"):
         headers["authorization"]="Bearer "+provider["apiKey"]
     payload={"model":provider["model"],"messages":messages,"temperature":provider.get("temperature",.2),
-             "max_tokens":provider.get("maxTokens",4096),"tools":tools,"tool_choice":"auto"}
+             "max_tokens":provider.get("maxTokens",4096)}
+    if tools:
+        payload["tools"]=tools
+        payload["tool_choice"]="auto"
     for attempt in range(3):
         try:
             response=await client.post(chat_url(provider["baseUrl"]),headers=headers,json=payload)
