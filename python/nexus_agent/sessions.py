@@ -1,6 +1,6 @@
 """SQLite-backed conversation history and checkpoints."""
 from __future__ import annotations
-import json, sqlite3
+import json, sqlite3, os
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -10,6 +10,10 @@ class SessionStore:
         self.path = path or (Path.home() / ".nexus" / "sessions.sqlite3")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._init()
+        try:
+            os.chmod(self.path, 0o600)
+        except OSError:
+            pass
 
     def _connect(self):
         db = sqlite3.connect(self.path, timeout=10)
