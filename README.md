@@ -65,7 +65,7 @@ Write and shell permissions start disabled. Only enable them in a workspace you 
 
 ## Agent runtime
 
-The bounded tool loop supports listing files, reading files, text search, writing files (approval required), shell commands (approval required), and tools discovered from configured MCP servers. Tool execution is capped at eight rounds per user request.
+The bounded tool loop supports listing files, reading files, text search, writing files (approval required), shell commands (approval required), tools discovered from configured MCP servers, and bounded advisory sub-agents (planner, reviewer, researcher and tester). Sub-agents have no workspace tools and cannot recursively delegate. Tool execution is capped at eight rounds per user request.
 
 Sessions, messages and file-write checkpoints are stored in `~/.nexus/sessions.sqlite3`. Session history is scoped to its canonical workspace path. Checkpoints retain the previous contents of a file before an agent write; this is a recovery record, not an automatic rollback feature.
 
@@ -115,4 +115,4 @@ GitHub Actions runs TypeScript type-check/build and Python tests on pushes to `m
 
 ## Current scope
 
-NEXUS now includes a persistent coding-agent loop, workspace tools, local provider dashboard, encrypted keys, session history, write checkpoints, MCP stdio tool discovery and CI automation. It is still not a claim of complete OpenClaude feature parity or a certified production release. Streaming UX, native provider-specific adapters, interactive per-tool approval prompts, reliable rollback/restore UI, sub-agent orchestration, richer task planning, broad platform testing and a security review remain future work. Validate the CI run and test against the actual providers and MCP servers you intend to use before relying on it for important repositories.
+NEXUS now includes a persistent coding-agent loop, workspace tools, local provider dashboard, encrypted keys, session history, write checkpoints, MCP stdio tool discovery and CI automation. It is still not a claim of complete OpenClaude feature parity or a certified production release. Streaming UX, native provider-specific adapters, interactive per-tool approval prompts, reliable rollback/restore UI, persistent specialist agents with independent contexts, richer task planning, broad platform testing and a security review remain future work. Validate the CI run and test against the actual providers and MCP servers you intend to use before relying on it for important repositories.
