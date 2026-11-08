@@ -1,5 +1,6 @@
 from pathlib import Path
-import subprocess\nimport json
+import subprocess
+import json
 
 class WorkspaceTools:
     """Workspace-confined file and search tools plus opt-in shell execution."""
