@@ -77,7 +77,13 @@ class SessionStore:
 
     def list(self, workspace: str) -> list[dict[str,Any]]:
         with self._connect() as db:
-            rows=db.execute("SELECT s.id,s.title,s.created_at,s.updated_at,(SELECT COUNT(*) FROM messages m WHERE m.session_id=s.id) AS messages FROM sessions s WHERE workspace=? ORDER BY updated_at DESC LIMIT 100",(workspace,)).fetchall()
+            rows=db.execute("""
+                SELECT s.id,s.title,s.created_at,s.updated_at,
+                       (SELECT COUNT(*) FROM messages m WHERE m.session_id=s.id) AS messages,
+                       (SELECT substr(m.content,1,180) FROM messages m
+                        WHERE m.session_id=s.id AND m.role='user' ORDER BY m.id DESC LIMIT 1) AS preview
+                FROM sessions s WHERE workspace=? ORDER BY updated_at DESC LIMIT 200
+            """,(workspace,)).fetchall()
         return [dict(r) for r in rows]
 
     def delete(self, sid: str, workspace: str):

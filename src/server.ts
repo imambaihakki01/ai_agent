@@ -6,6 +6,7 @@ import { list, upsert, remove, runtime } from "./store.js";
 
 const host = process.env.CLAUDE_HOST ?? "127.0.0.1";
 const port = Number(process.env.CLAUDE_PORT ?? 4317);
+const agentUrl = (process.env.CLAUDE_AGENT_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
 const assets = join(dirname(fileURLToPath(import.meta.url)), "..", "dashboard");
 
 export async function startServer() {
@@ -26,6 +27,7 @@ export async function startServer() {
   });
 
   app.get("/api/health", (_request, response) => response.json({ ok: true }));
+  app.get("/api/workspace", (_request, response) => response.json({ path: process.cwd() }));
   app.get("/api/providers", async (_request, response, next) => {
     try { response.json(await list()); } catch (error) { next(error); }
   });
@@ -37,6 +39,39 @@ export async function startServer() {
   });
   app.delete("/api/providers/:id", async (request, response, next) => {
     try { await remove(request.params.id); response.status(204).end(); } catch (error) { next(error); }
+  });
+
+  app.get("/api/sessions", async (request, response) => {
+    const workspace = request.query.workspace;
+    if (typeof workspace !== "string" || workspace.length < 1 || workspace.length > 4096) {
+      return response.status(400).json({ error: "A valid workspace path is required." });
+    }
+    try {
+      const url = new URL(agentUrl + "/sessions");
+      url.searchParams.set("workspace", workspace);
+      const result = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      const body = await result.text();
+      response.status(result.status).type("application/json").send(body);
+    } catch {
+      response.status(503).json({ error: "Agent runtime unavailable. Start it with: python -m claude_agent.main" });
+    }
+  });
+  app.delete("/api/sessions/:id", async (request, response) => {
+    const workspace = request.query.workspace;
+    if (typeof workspace !== "string" || workspace.length < 1 || workspace.length > 4096) {
+      return response.status(400).json({ error: "A valid workspace path is required." });
+    }
+    try {
+      const url = new URL(agentUrl + "/sessions/" + encodeURIComponent(request.params.id));
+      url.searchParams.set("workspace", workspace);
+      const result = await fetch(url, { method: "DELETE", signal: AbortSignal.timeout(5000) });
+      const body = await result.text();
+      response.status(result.status);
+      if (body) response.type("application/json").send(body);
+      else response.end();
+    } catch {
+      response.status(503).json({ error: "Agent runtime unavailable. Start it with: python -m claude_agent.main" });
+    }
   });
 
   app.post("/api/providers/:id/test", async (request, response) => {
@@ -53,7 +88,7 @@ export async function startServer() {
       const headers: Record<string, string> = anthropic
         ? { "x-api-key": provider.apiKey, "anthropic-version": "2023-06-01" }
         : provider.apiKey ? { Authorization: "Bearer " + provider.apiKey } : {};
-      const result = await fetch(url, { headers });
+      const result = await fetch(url, { headers, signal: AbortSignal.timeout(10000) });
       response.status(result.ok ? 200 : 502).json({
         ok: result.ok,
         status: result.status,
