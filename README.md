@@ -28,7 +28,7 @@ pip install -e "./python[dev]"
 Start the dashboard and configure a model profile:
 
 ```bash
-node dist/cli.js dashboard
+claude dashboard
 ```
 
 Open http://127.0.0.1:4317, add a provider, and save it. In another terminal (with the Python environment activated), start the agent runtime:
@@ -40,10 +40,10 @@ python -m claude_agent.main
 Then start the CLI:
 
 ```bash
-node dist/cli.js chat
+claude
 ```
 
-Development: `npm run dev -- dashboard` or `npm run dev -- chat`.
+Development: `npm run dev -- dashboard` or `npm run dev -- chat`. Use `claude --help` and `claude --version` for CLI help and version.
 
 ## Providers
 
