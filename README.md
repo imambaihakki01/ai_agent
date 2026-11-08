@@ -17,6 +17,7 @@ git clone https://github.com/imambaihakki01/ai_agent.git
 cd ai_agent
 npm install
 npm run build
+npm link
 python -m venv .venv
 # Linux/macOS:
 source .venv/bin/activate
@@ -90,7 +91,7 @@ Restart the Python runtime after changing this variable. Claude CLI starts confi
 
 Bundled skills: deep-research, code-architect, fullstack-engineer, debug-master, code-review, test-engineer, security-auditor, database-architect and git-master.
 
-Add project skills under `./.claude-cli/skills/<name>/SKILL.md` or user skills under `~./.claude-cli/skills/<name>/SKILL.md`.
+Add project skills under `./.claude-cli/skills/<name>/SKILL.md` or user skills under `~/.claude-cli/skills/<name>/SKILL.md`.
 
 ## Security notes
 
