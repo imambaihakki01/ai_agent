@@ -11,7 +11,7 @@ from .providers import complete, ProviderError
 from .mcp import list_tools as mcp_list_tools, call_tool as mcp_call_tool
 from .agents import delegate as delegate_agent
 
-app = FastAPI(title="Claude Agent Runtime", version="0.3.0")
+app = FastAPI(title="Claude Agent Runtime", version="0.2.0")
 CONFIG_URL = os.getenv("CLAUDE_CONFIG_URL", "http://127.0.0.1:4317")
 SESSIONS = SessionStore()
 
@@ -32,6 +32,8 @@ TOOLS = [
  {"type":"function","function":{"name":"list_files","description":"List files in the workspace, optionally under a relative directory.","parameters":{"type":"object","properties":{"path":{"type":"string"}}}}},
  {"type":"function","function":{"name":"read_file","description":"Read a UTF-8 text file in the workspace.","parameters":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}}},
  {"type":"function","function":{"name":"search_files","description":"Search text in workspace files. Skips hidden folders, node_modules and .git.","parameters":{"type":"object","properties":{"query":{"type":"string"},"path":{"type":"string"}},"required":["query"]}}},
+ {"type":"function","function":{"name":"git_status","description":"Read-only Git working tree status for the current workspace.","parameters":{"type":"object","properties":{}}}},
+ {"type":"function","function":{"name":"git_diff","description":"Read-only Git diff for unstaged changes. Set staged=true to inspect the Git index.","parameters":{"type":"object","properties":{"staged":{"type":"boolean"}}}}},
  {"type":"function","function":{"name":"write_file","description":"Create or replace a workspace file. Only available when the user explicitly enables write approval.","parameters":{"type":"object","properties":{"path":{"type":"string"},"content":{"type":"string"}},"required":["path","content"]}}},
  {"type":"function","function":{"name":"run_shell","description":"Run a shell command in the workspace. Only available when the user explicitly enables shell approval.","parameters":{"type":"object","properties":{"command":{"type":"string"}},"required":["command"]}}},
  {"type":"function","function":{"name":"delegate_task","description":"Ask a bounded advisory sub-agent to plan, review, research or design tests. Sub-agents cannot call tools or modify files.","parameters":{"type":"object","properties":{"role":{"type":"string","enum":["planner","reviewer","researcher","tester"]},"task":{"type":"string"}},"required":["role","task"]}}}
@@ -39,7 +41,7 @@ TOOLS = [
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    return {"ok": True, "service": "claude-agent", "version": "0.3.0"}
+    return {"ok": True, "service": "claude-agent", "version": "0.2.0"}
 
 async def provider() -> dict[str, Any]:
     try:
@@ -86,6 +88,10 @@ def execute_tool(name: str, args: dict[str, Any], tools: WorkspaceTools, body: C
         return tools.read_file(args["path"])
     if name == "search_files":
         return json.dumps(tools.search_files(args["query"], args.get("path", ".")))
+    if name == "git_status":
+        return tools.git_status()
+    if name == "git_diff":
+        return tools.git_diff(bool(args.get("staged", False)))
     if name == "write_file":
         if not body.allowWrite:
             return "Permission denied: file writes are disabled. Ask the user to enable write approval in this session."

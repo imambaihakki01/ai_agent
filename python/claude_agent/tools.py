@@ -1,5 +1,6 @@
 from pathlib import Path
 import subprocess
+import json
 
 class WorkspaceTools:
     """Workspace-confined file and search tools plus opt-in shell execution."""
@@ -56,6 +57,27 @@ class WorkspaceTools:
             except (OSError, UnicodeDecodeError):
                 continue
         return matches
+
+    def git_status(self) -> str:
+        result = subprocess.run(
+            ["git", "status", "--short", "--branch"],
+            cwd=self.workspace, text=True, capture_output=True, timeout=10, check=False,
+        )
+        if result.returncode:
+            return (result.stderr or "Not a Git repository").strip()[:4000]
+        return (result.stdout or "Working tree clean").strip()[:4000]
+
+    def git_diff(self, staged: bool = False) -> str:
+        command = ["git", "diff", "--no-ext-diff", "--"]
+        if staged:
+            command = ["git", "diff", "--cached", "--no-ext-diff", "--"]
+        result = subprocess.run(
+            command, cwd=self.workspace, text=True, capture_output=True,
+            timeout=15, check=False,
+        )
+        if result.returncode:
+            raise RuntimeError((result.stderr or "git diff failed")[:1000])
+        return result.stdout[:30000] or "No changes."
 
     def run_shell(self, command: str, approved: bool = False, timeout: int = 30) -> str:
         if not approved:
