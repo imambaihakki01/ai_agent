@@ -1,4 +1,4 @@
-from nexus_agent.providers import chat_url
+from claude_agent.providers import chat_url
 
 def test_chat_url_normalization():
     assert chat_url("https://api.example/v1")=="https://api.example/v1/chat/completions"
