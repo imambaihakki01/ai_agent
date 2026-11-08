@@ -15,6 +15,16 @@ class WorkspaceTools:
             raise ValueError("Path escapes workspace")
         return target
 
+    def _workspace_target(self, path: Path) -> Path | None:
+        """Resolve a discovered path and reject symlinks that leave the workspace."""
+        try:
+            target = path.resolve()
+        except (OSError, RuntimeError):
+            return None
+        if target != self.workspace and self.workspace not in target.parents:
+            return None
+        return target
+
     def read_file(self, path: str, limit: int = 200000) -> str:
         target = self.resolve(path)
         if not target.is_file():
@@ -32,7 +42,8 @@ class WorkspaceTools:
         for item in root.rglob("*"):
             if any(part in self.IGNORED or part.startswith(".") for part in item.relative_to(root).parts):
                 continue
-            if item.is_file():
+            target = self._workspace_target(item)
+            if target is not None and target.is_file():
                 found.append(str(item.relative_to(self.workspace)))
             if len(found) >= 500:
                 break
@@ -46,10 +57,11 @@ class WorkspaceTools:
         for item in root.rglob("*"):
             if any(part in self.IGNORED or part.startswith(".") for part in item.relative_to(root).parts):
                 continue
-            if not item.is_file() or item.stat().st_size > 500_000:
+            target = self._workspace_target(item)
+            if target is None or not target.is_file() or target.stat().st_size > 500_000:
                 continue
             try:
-                for number, line in enumerate(item.read_text(encoding="utf-8").splitlines(), 1):
+                for number, line in enumerate(target.read_text(encoding="utf-8").splitlines(), 1):
                     if query.casefold() in line.casefold():
                         matches.append({"path": str(item.relative_to(self.workspace)), "line": str(number), "text": line[:500]})
                         if len(matches) >= limit:
