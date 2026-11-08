@@ -19,7 +19,7 @@ export async function startServer() {
       "Content-Security-Policy",
       "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'",
     );
-    if (request.headers.host && !/^(127\.0\.0\.1|localhost)(:\\d+)?$/.test(request.headers.host)) {
+    if (request.headers.host && !/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(request.headers.host)) {
       return response.status(403).send("Local access only");
     }
     next();
