@@ -1,5 +1,5 @@
 import {mkdir,readFile,writeFile,rename} from "node:fs/promises";import {homedir} from "node:os";import {join} from "node:path";import {z} from "zod";import {decrypt,encrypt} from "./crypto.js";
-const dir=join(homedir(),".nexus"),file=join(dir,"config.json");
+const dir=join(homedir(),"/.claude-cli"),file=join(dir,"config.json");
 const schema=z.object({id:z.string().min(1).max(64).regex(/^[a-zA-Z0-9_-]+$/),name:z.string().min(1).max(100),baseUrl:z.string().url(),model:z.string().min(1).max(200),apiKey:z.string().max(4096).optional().default(""),temperature:z.number().min(0).max(2).default(.2),maxTokens:z.number().int().min(1).max(200000).default(4096),isDefault:z.boolean().default(false)});
 type P=z.infer<typeof schema>;type S=Omit<P,"apiKey">&{encryptedApiKey:string};type C={providers:S[];activeProviderId?:string};
 async function load():Promise<C>{await mkdir(dir,{recursive:true,mode:0o700});try{return JSON.parse(await readFile(file,"utf8")) as C;}catch(e){if((e as NodeJS.ErrnoException).code==="ENOENT")return{providers:[]};throw e;}}
