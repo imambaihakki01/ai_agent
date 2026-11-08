@@ -1,6 +1,6 @@
 from pathlib import Path
 import pytest
-from nexus_agent.tools import WorkspaceTools
+from claude_agent.tools import WorkspaceTools
 
 def test_parent_escape_is_rejected(tmp_path: Path):
     with pytest.raises(ValueError):
