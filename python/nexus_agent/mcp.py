@@ -66,9 +66,12 @@ async def list_tools() -> list[dict[str,Any]]:
             for item in result.get("tools",[]):
                 name=item.get("name")
                 if isinstance(name,str) and re.fullmatch(r"[a-zA-Z0-9_-]{1,80}",name):
+                    schema=item.get("inputSchema")
+                    if not isinstance(schema,dict) or schema.get("type")!="object":
+                        schema={"type":"object","properties":{}}
                     tools.append({"type":"function","function":{"name":f"mcp__{server}__{name}",
                         "description":str(item.get("description","MCP tool"))[:1000],
-                        "parameters":item.get("inputSchema") or {"type":"object","properties":{}}}})
+                        "parameters":schema}})
         except Exception:
             continue
         finally:
