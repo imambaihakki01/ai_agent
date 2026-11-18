@@ -1,1 +1,16 @@
-node_modules/\ndist/\n.venv/\n__pycache__/\n*.pyc\n.env\n.nexus/\n
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.sqlite3
+*.db
+data/
+logs/
+browser-profile/
+playwright-report/

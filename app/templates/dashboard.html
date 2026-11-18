@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Facebook AI Agent</title><link rel="stylesheet" href="/static/style.css"></head>
+<body><header><div><strong>Facebook AI Agent</strong><small>Workspace pribadi • NVIDIA NIM</small></div><form method="post" action="/logout"><button class="secondary">Keluar</button></form></header>
+<main><section class="intro"><h1>Asisten AI kamu</h1><p>Buat draf konten, rencanakan aktivitas, dan analisis materi yang kamu berikan. Belum ada aksi otomatis ke Facebook.</p></section>
+<section id="history" class="history"><!--MESSAGES--></section>
+<form id="chat" class="composer"><textarea name="prompt" rows="3" maxlength="8000" placeholder="Tulis instruksi untuk AI..." required></textarea><button id="send">Kirim ke AI</button><p id="status" aria-live="polite"></p></form></main>
+<script>
+document.getElementById('chat').addEventListener('submit', async (event) => {
+ event.preventDefault();
+ const form = event.currentTarget, button = document.getElementById('send'), status = document.getElementById('status');
+ const data = new FormData(form); button.disabled = true; status.textContent = 'Menunggu jawaban...';
+ try {
+  const response = await fetch('/api/chat', {method:'POST', body:data});
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.detail || 'Permintaan gagal');
+  location.reload();
+ } catch (error) { status.textContent = error.message; }
+ finally { button.disabled = false; }
+});
+</script></body></html>
