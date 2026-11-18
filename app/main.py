@@ -33,14 +33,6 @@ app.mount("/static", StaticFiles(directory=str(ROOT / "static")), name="static")
 
 @app.middleware("http")
 async def security_headers_and_csrf(request: Request, call_next):
-    if request.method == "POST":
-        try:
-            form = await request.form()
-            token = str(form.get("csrf_token", ""))
-        except Exception:
-            token = ""
-        if not valid_csrf(request, token):
-            return HTMLResponse("Permintaan ditolak (CSRF). Muat ulang halaman.", status_code=403)
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
@@ -82,6 +74,8 @@ async def login_page(request: Request):
 
 @app.post("/login")
 async def login(request: Request, password: str = Form(...), csrf_token: str = Form(...)):
+    if not valid_csrf(request, csrf_token):
+        raise HTTPException(status_code=403, detail="Token keamanan tidak valid. Muat ulang halaman.")
     client_key = request.client.host if request.client else "unknown"
     with connect() as db:
         if not login_allowed(db, client_key):
@@ -98,12 +92,16 @@ async def login(request: Request, password: str = Form(...), csrf_token: str = F
 @app.post("/logout")
 async def logout(request: Request, csrf_token: str = Form(...)):
     require_login(request)
+    if not valid_csrf(request, csrf_token):
+        raise HTTPException(status_code=403, detail="Token keamanan tidak valid.")
     request.session.clear()
     return RedirectResponse("/login", status_code=303)
 
 @app.post("/api/chat")
 async def chat(request: Request, prompt: str = Form(...), csrf_token: str = Form(...)):
     require_login(request)
+    if not valid_csrf(request, csrf_token):
+        raise HTTPException(status_code=403, detail="Token keamanan tidak valid.")
     prompt = prompt.strip()
     if not prompt or len(prompt) > settings.max_prompt_chars:
         raise HTTPException(status_code=400, detail="Pesan kosong atau terlalu panjang.")
@@ -123,6 +121,8 @@ async def chat(request: Request, prompt: str = Form(...), csrf_token: str = Form
 @app.post("/api/clear")
 async def clear_history(request: Request, csrf_token: str = Form(...)):
     require_login(request)
+    if not valid_csrf(request, csrf_token):
+        raise HTTPException(status_code=403, detail="Token keamanan tidak valid.")
     with connect() as db:
         db.execute("DELETE FROM messages")
     return RedirectResponse("/", status_code=303)
