@@ -1,0 +1,27 @@
+[Unit]
+Description=Facebook AI Agent Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=facebook-ai
+Group=facebook-ai
+WorkingDirectory=/opt/facebook-ai
+EnvironmentFile=/opt/facebook-ai/.env
+ExecStart=/opt/facebook-ai/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/data/facebook-ai
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictSUIDSGID=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -1,20 +1,14 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Facebook AI Agent</title><link rel="stylesheet" href="/static/style.css"></head>
-<body><header><div><strong>Facebook AI Agent</strong><small>Workspace pribadi • NVIDIA NIM</small></div><form method="post" action="/logout"><button class="secondary">Keluar</button></form></header>
-<main><section class="intro"><h1>Asisten AI kamu</h1><p>Buat draf konten, rencanakan aktivitas, dan analisis materi yang kamu berikan. Belum ada aksi otomatis ke Facebook.</p></section>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#111827"><title>Facebook AI Agent</title><link rel="stylesheet" href="/static/style.css"></head>
+<body><header><div class="brand"><div class="brand-mark">AI</div><div><strong>Facebook AI Agent</strong><small>Workspace pribadi · NVIDIA NIM</small></div></div><form method="post" action="/logout"><input type="hidden" name="csrf_token" value="__CSRF__"><button class="secondary">Keluar</button></form></header>
+<main><section class="intro"><div><span class="eyebrow">ASISTEN KONTEN</span><h1>Halo! Mau kerjakan apa?</h1><p>Buat caption, ide konten, kalender posting, hashtag, atau analisis komentar dan pesan yang kamu berikan.</p></div></section>
+<section class="quick"><button type="button" class="chip" data-prompt="Buatkan 5 ide konten Facebook yang menarik untuk minggu ini.">Ide konten</button><button type="button" class="chip" data-prompt="Buatkan caption Facebook yang menarik, singkat, dan punya ajakan bertindak.">Buat caption</button><button type="button" class="chip" data-prompt="Buat kalender konten Facebook 7 hari beserta tema dan jam posting yang disarankan.">Kalender 7 hari</button></section>
 <section id="history" class="history"><!--MESSAGES--></section>
-<form id="chat" class="composer"><textarea name="prompt" rows="3" maxlength="8000" placeholder="Tulis instruksi untuk AI..." required></textarea><button id="send">Kirim ke AI</button><p id="status" aria-live="polite"></p></form></main>
+<form id="chat" class="composer"><input type="hidden" name="csrf_token" value="__CSRF__"><textarea name="prompt" rows="3" maxlength="8000" placeholder="Tulis instruksi untuk AI..." required></textarea><div class="composer-footer"><span id="status" aria-live="polite">AI hanya menyiapkan draf; kamu tetap mengendalikan akun Facebook.</span><button id="send" class="primary">Kirim ke AI</button></div></form>
+<form method="post" action="/api/clear" class="clear-form" onsubmit="return confirm('Hapus seluruh riwayat chat?')"><input type="hidden" name="csrf_token" value="__CSRF__"><button class="text-button">Hapus riwayat chat</button></form>
+</main>
 <script>
-document.getElementById('chat').addEventListener('submit', async (event) => {
- event.preventDefault();
- const form = event.currentTarget, button = document.getElementById('send'), status = document.getElementById('status');
- const data = new FormData(form); button.disabled = true; status.textContent = 'Menunggu jawaban...';
- try {
-  const response = await fetch('/api/chat', {method:'POST', body:data});
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.detail || 'Permintaan gagal');
-  location.reload();
- } catch (error) { status.textContent = error.message; }
- finally { button.disabled = false; }
-});
+const form=document.getElementById('chat'), input=form.elements.prompt, button=document.getElementById('send'), status=document.getElementById('status');
+document.querySelectorAll('[data-prompt]').forEach(el=>el.addEventListener('click',()=>{input.value=el.dataset.prompt;input.focus();}));
+form.addEventListener('submit',async event=>{event.preventDefault();if(!input.value.trim())return;button.disabled=true;status.textContent='Sedang berpikir...';try{const response=await fetch('/api/chat',{method:'POST',body:new FormData(form)});const result=await response.json();if(!response.ok)throw new Error(result.detail||'Permintaan gagal');location.reload();}catch(error){status.textContent=error.message;}finally{button.disabled=false;}});
 </script></body></html>

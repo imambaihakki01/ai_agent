@@ -1,10 +1,12 @@
-# Security notes
+# Security
 
-- Keep the .env file, database files, logs, and Chromium profile outside Git.
-- Use a unique high-entropy APP_SECRET_KEY and strong dashboard password.
-- Set COOKIE_SECURE=true only when HTTPS is correctly configured; production must use HTTPS.
-- Bind Uvicorn to 127.0.0.1 and expose only the reverse proxy port.
-- Do not publish VNC (5901), FastAPI (8000), or Chromium debugging (9222).
-- Restrict VPS SSH access at the provider firewall where possible.
-- Do not store Facebook credentials or session cookies in prompts, logs, or model context.
-- Browser automation is not implemented in this initial milestone. Add it only with explicit allowlisted actions, user approval, audit logs, and compliance with platform rules.
+- Keep `.env`, SQLite database, logs, backups, and browser profiles out of Git.
+- Installer generates a unique secret and asks for a strong dashboard password.
+- Dashboard must use HTTPS. Initial self-signed certificate is bootstrap-only; use a trusted certificate for regular access.
+- Expose only TCP 8443 through the provider panel. Keep 8000, 5901, and 9222 private.
+- Uvicorn binds to 127.0.0.1 and runs as unprivileged user facebook-ai.
+- Session cookie is HttpOnly, SameSite=Strict, Secure; POST forms require CSRF token.
+- Login attempts are limited per client address.
+- NVIDIA API key stays in the .env file and is never sent in model prompts.
+- Never store Facebook passwords, OTPs, or session cookies in this application.
+- No arbitrary shell tool or automatic Facebook action is exposed to the model.
