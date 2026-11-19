@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import asyncio
 from html import escape
 from pathlib import Path
 import logging
@@ -9,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
+from app import browser as fb_browser
 from app.database import connect, initialize_database
 from app.nvidia import ask_nvidia
 from app.security import csrf_token, is_authenticated, login_allowed, password_matches, record_login_failure, valid_csrf
@@ -46,6 +48,68 @@ async def security_headers_and_csrf(request: Request, call_next):
 def require_login(request: Request) -> None:
     if not is_authenticated(request):
         raise HTTPException(status_code=401, detail="Silakan login kembali.")
+
+
+@app.get("/api/browser/status")
+async def browser_status(request: Request):
+    require_login(request)
+    return await asyncio.to_thread(fb_browser.status)
+
+@app.post("/api/browser/open")
+async def browser_open(request: Request, url: str = Form("https://www.facebook.com/"), csrf_token: str = Form(...)):
+    require_login(request)
+    if not valid_csrf(request, csrf_token):
+        raise HTTPException(status_code=403, detail="Token keamanan tidak valid.")
+    try:
+        return await asyncio.to_thread(fb_browser.open_facebook, url)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+@app.get("/api/browser/screenshot")
+async def browser_screenshot(request: Request):
+    require_login(request)
+    try:
+        return await asyncio.to_thread(fb_browser.screenshot)
+    except Exception:
+        logger.exception("Browser screenshot failed")
+        raise HTTPException(status_code=503, detail="Browser belum siap. Tekan Buka Facebook.")
+
+@app.post("/api/browser/click")
+async def browser_click(request: Request, x: int = Form(...), y: int = Form(...), csrf_token: str = Form(...)):
+    require_login(request)
+    if not valid_csrf(request, csrf_token):
+        raise HTTPException(status_code=403, detail="Token keamanan tidak valid.")
+    try:
+        return await asyncio.to_thread(fb_browser.click, x, y)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+@app.post("/api/browser/type")
+async def browser_type(request: Request, value: str = Form(...), csrf_token: str = Form(...)):
+    require_login(request)
+    if not valid_csrf(request, csrf_token):
+        raise HTTPException(status_code=403, detail="Token keamanan tidak valid.")
+    try:
+        return await asyncio.to_thread(fb_browser.type_text, value)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+@app.post("/api/browser/key")
+async def browser_key(request: Request, key: str = Form(...), csrf_token: str = Form(...)):
+    require_login(request)
+    if not valid_csrf(request, csrf_token):
+        raise HTTPException(status_code=403, detail="Token keamanan tidak valid.")
+    try:
+        return await asyncio.to_thread(fb_browser.press_key, key)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+@app.post("/api/browser/close")
+async def browser_close(request: Request, csrf_token: str = Form(...)):
+    require_login(request)
+    if not valid_csrf(request, csrf_token):
+        raise HTTPException(status_code=403, detail="Token keamanan tidak valid.")
+    return await asyncio.to_thread(fb_browser.close_browser)
 
 @app.get("/health")
 async def health():
