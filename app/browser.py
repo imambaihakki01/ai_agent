@@ -11,6 +11,14 @@ _context = None
 _page = None
 _allowed_hosts = {"facebook.com", "www.facebook.com", "m.facebook.com", "web.facebook.com"}
 
+def _guard_route(route):
+    host = urlparse(route.request.url).hostname or ""
+    allowed = ("facebook.com", "fbcdn.net", "fbsbx.com", "facebook.net", "fb.com")
+    if route.request.url.startswith("https://") and any(host == domain or host.endswith("." + domain) for domain in allowed):
+        route.continue_()
+    else:
+        route.abort()
+
 def _ensure_page():
     global _playwright, _context, _page
     if _page is not None and not _page.is_closed():
@@ -31,6 +39,7 @@ def _ensure_page():
         viewport={"width": 1365, "height": 900},
         locale="id-ID",
     )
+    _context.route("**/*", _guard_route)
     _page = _context.pages[0] if _context.pages else _context.new_page()
     _page.set_default_timeout(10000)
     return _page
