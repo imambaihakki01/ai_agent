@@ -6,7 +6,7 @@ DATA_DIR="/data/facebook-ai"
 REPO="https://github.com/imambaihakki01/ai_agent.git"
 echo "== Facebook AI Agent installer =="
 apt-get update
-DEBIAN_FRONTEND=noninteractive apt-get install -y git python3 python3-venv python3-pip nginx openssl
+DEBIAN_FRONTEND=noninteractive apt-get install -y git python3 python3-venv python3-pip nginx openssl chromium
 if ! id facebook-ai >/dev/null 2>&1; then useradd --system --home "$DATA_DIR" --shell /usr/sbin/nologin facebook-ai; fi
 mkdir -p "$DATA_DIR" /etc/ssl/facebook-ai
 chmod 700 "$DATA_DIR"
